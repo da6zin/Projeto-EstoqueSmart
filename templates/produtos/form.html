@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}{% if produto %}Editar Produto{% else %}Novo Produto{% endif %} — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('produtos.listar') }}" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0 fw-bold">
+                {% if produto %}
+                    <i class="bi bi-pencil me-2"></i>Editar Produto
+                {% else %}
+                    <i class="bi bi-plus-circle me-2"></i>Novo Produto
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nome do Produto <span class="text-danger">*</span></label>
+                        <input type="text" name="nome" class="form-control form-control-lg"
+                               placeholder="Ex: Camiseta Branca M"
+                               value="{{ produto.nome if produto else '' }}"
+                               required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Código <span class="text-danger">*</span></label>
+                        <input type="text" name="codigo" class="form-control form-control-lg"
+                               placeholder="Ex: CAM-001 ou 7891234567890"
+                               value="{{ produto.codigo if produto else '' }}"
+                               required>
+                        <div class="form-text">Código interno, SKU ou código de barras.</div>
+                    </div>
+
+                    {% if not produto %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Quantidade Inicial</label>
+                        <input type="number" name="quantidade_atual" class="form-control form-control-lg"
+                               placeholder="0" value="0" min="0">
+                        <div class="form-text">Quantidade que você tem em estoque agora.</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Quantidade Mínima para Pedido</label>
+                        <input type="number" name="quantidade_minima" class="form-control form-control-lg"
+                               placeholder="5"
+                               value="{{ produto.quantidade_minima if produto else 5 }}"
+                               min="0">
+                        <div class="form-text">
+                            <i class="bi bi-bell text-warning me-1"></i>
+                            O sistema alertará quando o estoque atingir este valor.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-tag me-1"></i>Preço de Custo (R$)
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" name="preco_custo" class="form-control"
+                                   placeholder="0,00"
+                                   value="{{ '%.2f'|format(produto.preco_custo|float) if produto and produto.preco_custo else '' }}">
+                        </div>
+                        <div class="form-text">Quanto você paga por unidade ao fornecedor. Usado para calcular o lucro.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-cash-coin me-1"></i>Preço de Venda (R$)
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" name="preco_venda" class="form-control"
+                                   placeholder="0,00"
+                                   value="{{ '%.2f'|format(produto.preco_venda|float) if produto and produto.preco_venda else '' }}">
+                        </div>
+                        <div class="form-text">Valor sugerido para cobrar do cliente. Já vem preenchido ao registrar uma saída, mas pode ser alterado.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-truck me-1"></i>Fornecedor
+                        </label>
+                        <select name="fornecedor_id" class="form-select form-select-lg">
+                            <option value="">— Sem fornecedor vinculado —</option>
+                            {% for f in fornecedores %}
+                            <option value="{{ f.id }}"
+                                {% if produto and produto.fornecedor_id == f.id %}selected{% endif %}>
+                                {{ f.nome }}{% if f.contato %} ({{ f.contato }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% if not fornecedores %}
+                        <div class="form-text">
+                            <a href="{{ url_for('fornecedores.novo') }}">Cadastrar um fornecedor</a> para poder vinculá-lo.
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if produto %}
+                                <i class="bi bi-check-lg me-2"></i>Salvar alterações
+                            {% else %}
+                                <i class="bi bi-plus-lg me-2"></i>Cadastrar produto
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

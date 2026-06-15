@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block title %}Fornecedores — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0 fw-bold"><i class="bi bi-truck me-2"></i>Fornecedores</h4>
+    <a href="{{ url_for('fornecedores.novo') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-plus-lg me-2"></i>Novo Fornecedor
+    </a>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-body py-2">
+        <form method="GET" class="d-flex gap-2 flex-wrap align-items-center">
+            <input type="text" name="q" class="form-control" style="max-width:320px"
+                   placeholder="Buscar por nome, CNPJ ou contato..."
+                   value="{{ busca }}">
+            <div class="form-check mb-0 ms-2">
+                <input type="checkbox" class="form-check-input" id="chk-ativos" name="ativos"
+                       value="0" {% if apenas_ativos == '0' %}checked{% endif %}
+                       onchange="this.form.submit()">
+                <label class="form-check-label" for="chk-ativos">Mostrar inativos</label>
+            </div>
+            <button type="submit" class="btn btn-outline-primary px-4">
+                <i class="bi bi-search"></i>
+            </button>
+            {% if busca %}
+            <a href="{{ url_for('fornecedores.listar') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i>
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+<!-- Lista -->
+<div class="card">
+    <div class="card-body p-0">
+        {% if fornecedores %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>CNPJ</th>
+                        <th>Contato</th>
+                        <th>Telefone</th>
+                        <th>E-mail</th>
+                        <th class="text-center">Produtos</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in fornecedores %}
+                    <tr {% if not f.ativo %}class="table-secondary text-muted"{% endif %}>
+                        <td>
+                            <div class="fw-semibold">{{ f.nome }}</div>
+                            {% if f.endereco %}
+                            <div class="text-muted small">{{ f.endereco }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ f.cnpj or '—' }}</td>
+                        <td>{{ f.contato or '—' }}</td>
+                        <td>
+                            {% if f.telefone %}
+                                <a href="tel:{{ f.telefone }}" class="text-decoration-none">
+                                    <i class="bi bi-telephone me-1"></i>{{ f.telefone }}
+                                </a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if f.email %}
+                                <a href="mailto:{{ f.email }}" class="text-decoration-none small">
+                                    {{ f.email }}
+                                </a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-secondary">{{ f.produtos | length }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if f.ativo %}
+                                <span class="badge bg-success">Ativo</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inativo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('fornecedores.editar', fornecedor_id=f.id) }}"
+                                   class="btn btn-sm btn-outline-secondary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('fornecedores.toggle_ativo', fornecedor_id=f.id) }}"
+                                      style="display:inline">
+                                    <button type="submit"
+                                            class="btn btn-sm {% if f.ativo %}btn-outline-warning{% else %}btn-outline-success{% endif %}"
+                                            title="{% if f.ativo %}Desativar{% else %}Ativar{% endif %}">
+                                        <i class="bi {% if f.ativo %}bi-pause-circle{% else %}bi-play-circle{% endif %}"></i>
+                                    </button>
+                                </form>
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        title="Excluir"
+                                        onclick="confirmarExclusao('{{ f.id }}', '{{ f.nome }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="p-3 text-muted small border-top">
+            {{ fornecedores | length }} fornecedor(es) encontrado(s)
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-truck fs-1 d-block mb-2"></i>
+            {% if busca %}
+                Nenhum fornecedor encontrado para "<strong>{{ busca }}</strong>".
+            {% else %}
+                Nenhum fornecedor cadastrado ainda.
+                <a href="{{ url_for('fornecedores.novo') }}">Cadastrar agora</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal exclusão -->
+<form id="form-excluir" method="POST" action="">
+    <div class="modal fade" id="modalExcluir" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Confirmar exclusão
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    Tem certeza que deseja excluir o fornecedor <strong id="modal-nome"></strong>?
+                    Os produtos vinculados a ele ficarão sem fornecedor.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+function confirmarExclusao(id, nome) {
+    document.getElementById('form-excluir').action = '/fornecedores/' + id + '/excluir';
+    document.getElementById('modal-nome').textContent = nome;
+    new bootstrap.Modal(document.getElementById('modalExcluir')).show();
+}
+</script>
+{% endblock %}

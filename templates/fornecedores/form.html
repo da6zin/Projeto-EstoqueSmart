@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{% if fornecedor %}Editar Fornecedor{% else %}Novo Fornecedor{% endif %} — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('fornecedores.listar') }}" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0 fw-bold">
+                {% if fornecedor %}
+                    <i class="bi bi-pencil me-2"></i>Editar Fornecedor
+                {% else %}
+                    <i class="bi bi-plus-circle me-2"></i>Novo Fornecedor
+                {% endif %}
+            </h4>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST">
+
+                    <!-- Identificação -->
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3 mt-1">
+                        <i class="bi bi-building me-1"></i>Identificação
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Nome da Empresa <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="nome" class="form-control form-control-lg"
+                                   placeholder="Ex: Distribuidora ABC Ltda"
+                                   value="{{ fornecedor.nome if fornecedor else '' }}"
+                                   required autofocus>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label fw-semibold">CNPJ</label>
+                            <input type="text" name="cnpj" class="form-control"
+                                   placeholder="00.000.000/0001-00"
+                                   value="{{ fornecedor.cnpj if fornecedor else '' }}">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label fw-semibold">Nome do Contato</label>
+                            <input type="text" name="contato" class="form-control"
+                                   placeholder="Ex: João Silva (vendedor)"
+                                   value="{{ fornecedor.contato if fornecedor else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Contato -->
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">
+                        <i class="bi bi-telephone me-1"></i>Contato
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label fw-semibold">Telefone / WhatsApp</label>
+                            <input type="text" name="telefone" class="form-control"
+                                   placeholder="(27) 99999-9999"
+                                   value="{{ fornecedor.telefone if fornecedor else '' }}">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label fw-semibold">E-mail</label>
+                            <input type="email" name="email" class="form-control"
+                                   placeholder="contato@fornecedor.com.br"
+                                   value="{{ fornecedor.email if fornecedor else '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Endereço</label>
+                            <input type="text" name="endereco" class="form-control"
+                                   placeholder="Rua, número, bairro, cidade"
+                                   value="{{ fornecedor.endereco if fornecedor else '' }}">
+                        </div>
+                    </div>
+
+                    <!-- Observação -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Observações</label>
+                        <textarea name="observacao" class="form-control" rows="3"
+                                  placeholder="Prazo de entrega, condições de pagamento, etc.">{{ fornecedor.observacao if fornecedor else '' }}</textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            {% if fornecedor %}
+                                <i class="bi bi-check-lg me-2"></i>Salvar alterações
+                            {% else %}
+                                <i class="bi bi-plus-lg me-2"></i>Cadastrar fornecedor
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

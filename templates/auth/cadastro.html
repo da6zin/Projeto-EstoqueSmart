@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Cadastro — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="text-center mb-4">
+            <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo" class="auth-logo mb-2">
+            <h2 class="fw-bold mt-2">EstoqueSmart</h2>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="card-title mb-4">Criar conta</h5>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nome</label>
+                        <input type="text" name="nome" class="form-control form-control-lg"
+                               placeholder="Seu nome" required autofocus>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" name="email" class="form-control form-control-lg"
+                               placeholder="seu@email.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Senha</label>
+                        <input type="password" name="senha" class="form-control form-control-lg"
+                               placeholder="Mínimo 6 caracteres" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Confirmar senha</label>
+                        <input type="password" name="confirmar" class="form-control form-control-lg"
+                               placeholder="Repita a senha" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Tipo de conta</label>
+                        <select name="cargo" id="cargo" class="form-select form-select-lg" onchange="toggleCamposEmpresa()">
+                            <option value="funcionario">Funcionário — movimentações e produtos</option>
+                            <option value="admin">Administrador — acesso total</option>
+                        </select>
+                    </div>
+                    <div class="mb-4" id="campo-nome-empresa">
+                        <label class="form-label">Nome da empresa</label>
+                        <input type="text" name="nome_empresa" class="form-control form-control-lg"
+                               placeholder="Nome da sua empresa">
+                        <small class="text-muted">Será gerado um código de convite para seus funcionários.</small>
+                    </div>
+                    <div class="mb-4 d-none" id="campo-codigo-convite">
+                        <label class="form-label">Código de convite da empresa</label>
+                        <input type="text" name="codigo_convite" class="form-control form-control-lg"
+                               placeholder="Código fornecido pelo administrador">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-person-plus me-2"></i>Criar conta
+                    </button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-3 text-muted">
+            Já tem conta?
+            <a href="{{ url_for('auth.login') }}">Fazer login</a>
+        </p>
+    </div>
+</div>
+<script>
+function toggleCamposEmpresa() {
+    var cargo = document.getElementById('cargo').value;
+    var campoNomeEmpresa = document.getElementById('campo-nome-empresa');
+    var campoCodigoConvite = document.getElementById('campo-codigo-convite');
+    if (cargo === 'admin') {
+        campoNomeEmpresa.classList.remove('d-none');
+        campoCodigoConvite.classList.add('d-none');
+    } else {
+        campoNomeEmpresa.classList.add('d-none');
+        campoCodigoConvite.classList.remove('d-none');
+    }
+}
+document.addEventListener('DOMContentLoaded', toggleCamposEmpresa);
+</script>
+{% endblock %}

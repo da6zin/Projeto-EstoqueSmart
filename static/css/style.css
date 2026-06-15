@@ -1,0 +1,171 @@
+:root {
+    --es-orange:        #F07A1A;
+    --es-orange-dark:   #C96210;
+    --es-orange-light:  #FFF0E0;
+    --es-orange-border: #F5A55A;
+    --es-dark:          #1E1E1E;
+    --es-gray:          #6c757d;
+}
+
+body {
+    background-color: #f5f5f5;
+    font-size: 1rem;
+}
+
+.navbar {
+    background-color: var(--es-dark) !important;
+    border-bottom: 3px solid var(--es-orange);
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #fff !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.navbar-brand img {
+    height: 38px;
+    width: 38px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
+.navbar .nav-link {
+    color: rgba(255,255,255,0.75) !important;
+    font-weight: 500;
+    padding: 0.5rem 0.9rem;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    background-color: var(--es-orange);
+    color: #fff !important;
+}
+
+.navbar .dropdown-menu {
+    border: 1px solid var(--es-orange-border);
+}
+
+.btn-primary {
+    background-color: var(--es-orange);
+    border-color: var(--es-orange);
+    color: #fff;
+    font-weight: 600;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--es-orange-dark);
+    border-color: var(--es-orange-dark);
+    color: #fff;
+}
+
+.btn-outline-primary {
+    color: var(--es-orange);
+    border-color: var(--es-orange);
+}
+.btn-outline-primary:hover {
+    background-color: var(--es-orange);
+    border-color: var(--es-orange);
+    color: #fff;
+}
+
+a {
+    color: var(--es-orange);
+}
+a:hover {
+    color: var(--es-orange-dark);
+}
+
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.card-header {
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #fafafa;
+    font-size: 0.95rem;
+}
+
+
+.card.bg-es-orange {
+    background-color: var(--es-orange) !important;
+    border-color: var(--es-orange-dark) !important;
+    color: #fff;
+}
+
+/* ---------- Dashboard cards ---------- */
+.dash-card {
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    color: #fff;
+}
+.dash-card .display-num {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.dash-card .label {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+}
+.dash-card-orange  { background: var(--es-orange); }
+.dash-card-danger  { background: #dc3545; }
+.dash-card-success { background: #198754; }
+.dash-card-warning { background: #d9a000; }
+
+
+.table td, .table th {
+    padding: 0.8rem 1rem;
+    vertical-align: middle;
+}
+
+.table-danger td {
+    color: #6b1a21;
+}
+
+.badge.bg-primary {
+    background-color: var(--es-orange) !important;
+}
+
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--es-orange-border);
+    box-shadow: 0 0 0 0.2rem rgba(240, 122, 26, 0.2);
+}
+
+.alert-warning {
+    background-color: var(--es-orange-light);
+    border-color: var(--es-orange-border);
+    color: #7a3800;
+}
+
+
+.auth-logo {
+    height: 80px;
+    width: 80px;
+    object-fit: contain;
+}
+
+/* ---------- Responsivo balcão (tablet-friendly) ---------- */
+.form-control-lg, .btn-lg {
+    font-size: 1.1rem;
+}
+
+@media (max-width: 576px) {
+    .table td, .table th {
+        font-size: 0.85rem;
+        padding: 0.65rem 0.5rem;
+    }
+}

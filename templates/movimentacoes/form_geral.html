@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% block title %}Nova Movimentação — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+        <div class="d-flex align-items-center mb-4">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h4 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Nova Movimentação</h4>
+        </div>
+
+        {% if not produtos %}
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Nenhum produto cadastrado ainda.
+            <a href="{{ url_for('produtos.novo') }}" class="alert-link">Cadastrar produto</a>
+        </div>
+        {% else %}
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST">
+
+                    <!-- Seletor de produto -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Produto <span class="text-danger">*</span></label>
+                        <select name="produto_id" id="produto_id" class="form-select form-select-lg" required onchange="atualizarProduto()">
+                            <option value="">Selecione um produto...</option>
+                            {% for p in produtos %}
+                            <option value="{{ p.id }}"
+                                    data-estoque="{{ p.quantidade_atual }}"
+                                    data-critico="{{ 'true' if p.estoque_critico else 'false' }}"
+                                    data-minimo="{{ p.quantidade_minima }}"
+                                    data-custo="{{ p.preco_custo|float if p.preco_custo else '' }}"
+                                    data-venda="{{ p.preco_venda|float if p.preco_venda else '' }}"
+                                    {% if produto_selecionado and p.id == produto_selecionado.id %}selected{% endif %}>
+                                {{ p.nome }} — {{ p.codigo }} ({{ p.quantidade_atual }} em estoque)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Info do estoque atual -->
+                    <div id="estoque-info" class="mb-4" style="display:none;">
+                        <div class="card border-primary">
+                            <div class="card-body d-flex justify-content-between align-items-center py-2">
+                                <span class="text-muted small">Estoque atual</span>
+                                <span id="estoque-num" class="fs-3 fw-bold text-success">0</span>
+                            </div>
+                            <div id="estoque-critico-alert" class="card-footer bg-danger text-white small py-1 text-center" style="display:none;">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                Estoque crítico — mínimo: <span id="estoque-minimo">0</span> unidades
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Tipo de Movimentação</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="tipo" id="tipo-entrada"
+                                       value="entrada" checked onchange="atualizarLabelPreco()">
+                                <label class="btn btn-outline-success w-100 py-3 fs-5" for="tipo-entrada">
+                                    <i class="bi bi-arrow-down-circle d-block fs-3 mb-1"></i>
+                                    Entrada
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="tipo" id="tipo-saida"
+                                       value="saida" onchange="atualizarLabelPreco()">
+                                <label class="btn btn-outline-warning w-100 py-3 fs-5" for="tipo-saida">
+                                    <i class="bi bi-arrow-up-circle d-block fs-3 mb-1"></i>
+                                    Saída
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Quantidade <span class="text-danger">*</span></label>
+                        <input type="number" name="quantidade" id="quantidade" class="form-control form-control-lg"
+                               placeholder="0" min="1" required oninput="calcularTotal()">
+                    </div>
+
+                    <!-- Campo de preço dinâmico -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" id="label-preco">
+                            <i class="bi bi-tag me-1"></i>Preço de Custo por Unidade (R$)
+                        </label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">R$</span>
+                            <input type="text" name="preco_unitario" id="preco_unitario"
+                                   class="form-control" placeholder="0,00" oninput="calcularTotal()">
+                        </div>
+                        <div class="form-text" id="hint-preco">Quanto você pagou por unidade nesta compra.</div>
+                    </div>
+
+                    <!-- Preview do total -->
+                    <div id="total-preview" class="alert alert-secondary py-2 mb-3" style="display:none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span id="label-total" class="small fw-semibold">Total da operação:</span>
+                            <span id="valor-total" class="fs-5 fw-bold">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Observação</label>
+                        <input type="text" name="observacao" class="form-control"
+                               placeholder="Ex: Venda balcão, Pedido fornecedor X... (opcional)">
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-lg me-2"></i>Confirmar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function atualizarProduto() {
+    const sel = document.getElementById('produto_id');
+    const opt = sel.options[sel.selectedIndex];
+    const infoDiv = document.getElementById('estoque-info');
+    const estoqueNum = document.getElementById('estoque-num');
+    const criticoAlert = document.getElementById('estoque-critico-alert');
+    const minimoSpan = document.getElementById('estoque-minimo');
+    const precoInput = document.getElementById('preco_unitario');
+
+    if (!opt.value) {
+        infoDiv.style.display = 'none';
+        return;
+    }
+
+    const estoque = parseInt(opt.dataset.estoque);
+    const critico = opt.dataset.critico === 'true';
+    const minimo = opt.dataset.minimo;
+    const custo = opt.dataset.custo;
+    const venda = opt.dataset.venda;
+
+    infoDiv.style.display = '';
+    estoqueNum.textContent = estoque;
+    estoqueNum.className = 'fs-3 fw-bold ' + (critico ? 'text-danger' : 'text-success');
+
+    if (critico) {
+        criticoAlert.style.display = '';
+        minimoSpan.textContent = minimo;
+    } else {
+        criticoAlert.style.display = 'none';
+    }
+
+    // Pré-preenche custo se for entrada e produto tiver preço cadastrado
+    const tipoEntrada = document.getElementById('tipo-entrada').checked;
+    if (tipoEntrada && custo) {
+        precoInput.value = parseFloat(custo).toFixed(2).replace('.', ',');
+    } else if (!tipoEntrada) {
+        // Na saída, pré-preenche com o preço de venda cadastrado (se houver)
+        precoInput.value = venda ? parseFloat(venda).toFixed(2).replace('.', ',') : '';
+    }
+
+    calcularTotal();
+}
+
+function atualizarLabelPreco() {
+    const isSaida = document.getElementById('tipo-saida').checked;
+    const label = document.getElementById('label-preco');
+    const hint = document.getElementById('hint-preco');
+    const precoInput = document.getElementById('preco_unitario');
+
+    // Pré-preenche custo na entrada / venda na saída
+    const sel = document.getElementById('produto_id');
+    const opt = sel.options[sel.selectedIndex];
+    const custo = opt && opt.dataset ? opt.dataset.custo : '';
+    const venda = opt && opt.dataset ? opt.dataset.venda : '';
+
+    if (isSaida) {
+        label.innerHTML = '<i class="bi bi-cash-coin me-1"></i>Preço de Venda por Unidade (R$)';
+        hint.textContent = 'Quanto você cobrou por unidade nesta venda.';
+        precoInput.value = venda ? parseFloat(venda).toFixed(2).replace('.', ',') : '';
+        precoInput.placeholder = '0,00';
+    } else {
+        label.innerHTML = '<i class="bi bi-tag me-1"></i>Preço de Custo por Unidade (R$)';
+        hint.textContent = 'Quanto você pagou por unidade nesta compra.';
+        if (custo) precoInput.value = parseFloat(custo).toFixed(2).replace('.', ',');
+    }
+    calcularTotal();
+}
+
+function calcularTotal() {
+    const qtd = parseInt(document.getElementById('quantidade').value) || 0;
+    const precoStr = document.getElementById('preco_unitario').value.replace(',', '.');
+    const preco = parseFloat(precoStr) || 0;
+    const totalDiv = document.getElementById('total-preview');
+    const valorSpan = document.getElementById('valor-total');
+    const labelSpan = document.getElementById('label-total');
+    const isSaida = document.getElementById('tipo-saida').checked;
+
+    if (qtd > 0 && preco > 0) {
+        const total = qtd * preco;
+        valorSpan.textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+        labelSpan.textContent = isSaida ? 'Total da venda:' : 'Total da compra:';
+        totalDiv.style.display = '';
+        totalDiv.className = 'alert py-2 mb-3 ' + (isSaida ? 'alert-success' : 'alert-warning');
+    } else {
+        totalDiv.style.display = 'none';
+    }
+}
+
+// Pre-select tipo via query string
+const params = new URLSearchParams(window.location.search);
+if (params.get('tipo') === 'saida') {
+    document.getElementById('tipo-saida').checked = true;
+    atualizarLabelPreco();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('produto_id');
+    if (sel && sel.value) atualizarProduto();
+});
+</script>
+{% endblock %}

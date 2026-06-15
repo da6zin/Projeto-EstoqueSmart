@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — EstoqueSmart{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Dashboard</h4>
+        <small class="text-muted">Bem-vindo, {{ current_user.nome }}</small>
+    </div>
+    <a href="{{ url_for('movimentacoes.registrar_geral') }}" class="btn btn-primary btn-lg">
+        <i class="bi bi-arrow-left-right me-2"></i>Nova Movimentação
+    </a>
+</div>
+
+<!-- Cartões de resumo -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="dash-card dash-card-orange h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="display-num">{{ total_produtos }}</div>
+                    <div class="label">Total de Produtos</div>
+                </div>
+                <i class="bi bi-boxes fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dash-card {% if total_criticos > 0 %}dash-card-danger{% else %}dash-card-success{% endif %} h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="display-num">{{ total_criticos }}</div>
+                    <div class="label">Estoque Crítico</div>
+                </div>
+                <i class="bi bi-exclamation-triangle fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dash-card dash-card-success h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="display-num">{{ movs_hoje | selectattr('tipo', 'equalto', 'entrada') | list | length }}</div>
+                    <div class="label">Entradas Hoje</div>
+                </div>
+                <i class="bi bi-arrow-down-circle fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="dash-card dash-card-warning h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="display-num">{{ movs_hoje | selectattr('tipo', 'equalto', 'saida') | list | length }}</div>
+                    <div class="label">Saídas Hoje</div>
+                </div>
+                <i class="bi bi-arrow-up-circle fs-2 opacity-50"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cards financeiros do dia -->
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1"><i class="bi bi-cash-stack me-1"></i>Receita de Vendas Hoje</div>
+                    <div class="fs-3 fw-bold text-success">
+                        R$ {{ '%.2f'|format(receita_hoje) | replace('.', ',') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100 {% if lucro_hoje < 0 %}border-danger{% endif %}">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="text-muted small mb-1"><i class="bi bi-piggy-bank me-1"></i>Lucro Estimado Hoje</div>
+                    <div class="fs-3 fw-bold {% if lucro_hoje >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        R$ {{ '%.2f'|format(lucro_hoje) | replace('.', ',') }}
+                    </div>
+                    <div class="text-muted" style="font-size:0.72rem;">Preço de venda − custo cadastrado no produto</div>
+                </div>
+                <i class="bi bi-{% if lucro_hoje >= 0 %}trending-up{% else %}trending-down{% endif %} fs-1 {% if lucro_hoje >= 0 %}text-success{% else %}text-danger{% endif %} opacity-25"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alertas críticos -->
+{% if produtos_criticos %}
+<div class="card border-danger mb-4">
+    <div class="card-header bg-danger text-white d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>{{ total_criticos }} produto(s) com estoque crítico — reposição necessária</strong>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Produto</th>
+                        <th>Código</th>
+                        <th>Fornecedor</th>
+                        <th class="text-center">Atual</th>
+                        <th class="text-center">Mínimo</th>
+                        <th class="text-end">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produtos_criticos %}
+                    <tr>
+                        <td class="fw-semibold">{{ p.nome }}</td>
+                        <td class="text-muted">{{ p.codigo }}</td>
+                        <td class="text-muted small">
+                            {% if p.fornecedor %}
+                                <i class="bi bi-truck me-1"></i>{{ p.fornecedor.nome }}
+                                {% if p.fornecedor.telefone %}
+                                    <br><span class="text-muted">{{ p.fornecedor.telefone }}</span>
+                                {% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-center"><span class="badge bg-danger fs-6">{{ p.quantidade_atual }}</span></td>
+                        <td class="text-center text-muted">{{ p.quantidade_minima }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('movimentacoes.registrar', produto_id=p.id) }}?tipo=entrada"
+                               class="btn btn-sm btn-success">
+                                <i class="bi bi-arrow-down-circle me-1"></i>Dar entrada
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Movimentações de hoje -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><strong>Movimentações de Hoje</strong></span>
+        <a href="{{ url_for('movimentacoes.historico') }}" class="btn btn-sm btn-outline-secondary">
+            Ver histórico completo
+        </a>
+    </div>
+    <div class="card-body p-0">
+        {% if movs_hoje %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Horário</th>
+                        <th>Produto</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-center">Qtd.</th>
+                        <th class="text-end">Preço Unit.</th>
+                        <th class="text-end">Total</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movs_hoje %}
+                    <tr>
+                        <td class="text-muted small">{{ m.criado_em.strftime('%H:%M') }}</td>
+                        <td>{{ m.produto.nome }}</td>
+                        <td class="text-center">
+                            {% if m.tipo == 'entrada' %}
+                                <span class="badge bg-success"><i class="bi bi-arrow-down me-1"></i>Entrada</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-arrow-up me-1"></i>Saída</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center fw-semibold">{{ m.quantidade }}</td>
+                        <td class="text-end text-muted small">
+                            {% if m.preco_unitario %}
+                                R$ {{ '%.2f'|format(m.preco_unitario|float) | replace('.', ',') }}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-end fw-semibold">
+                            {% if m.valor_total is not none %}
+                                <span class="{% if m.tipo == 'saida' %}text-success{% endif %}">
+                                    R$ {{ '%.2f'|format(m.valor_total) | replace('.', ',') }}
+                                </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="text-muted small">{{ m.observacao or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            Nenhuma movimentação registrada hoje.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
